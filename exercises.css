@@ -1,0 +1,28 @@
+h1.title {
+  color: #4C6A92;
+  font-size:60px;
+  font-weight: bold;
+}
+/* Level 1 header */
+h1 {
+  color: #4C6A92;
+  font-weight: bold;
+}
+/* Level 2 header */
+h2 {
+  color: #AD5D5D;
+  font-weight: bold;
+}
+/* Table of contents */
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+    z-index: 2;
+    color: #fff;
+    background-color: #AD5D5D;
+    border-color: #337ab7;
+}
+/* Navigation pills */
+.nav-pills>li.active>a, .nav-pills>li.active>a:focus, .nav-pills>li.active>a:hover {
+    color: #fff;
+    background-color: #AD5D5D;
+    color: #FFFFFF;
+}

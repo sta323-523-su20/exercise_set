@@ -1,0 +1,114 @@
+---
+title: "Exercises: 05-13-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+What does each of the following return? Run the code to check your answer.
+
+```{r eval=FALSE}
+if (1 == "1") "coercion  works" else "no coercion "
+
+ifelse(5 > c(1, 10, 2), "hello", "olleh")
+```
+
+## Solution
+
+```{r}
+if (1 == "1") "coercion  works" else "no coercion "
+ifelse(5 > c(1, 10, 2), "hello", "olleh")
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider two vectors, `x` and `y`, each of length one. Write a set of
+   conditionals that satisfy the following.
+   
+- If `x` is positive and `y` is negative or `y` is positive and `x` is
+  negative, print "knits".
+- If `x` divided by `y` is positive, print "stink".
+- Stop execution if `x` or `y` are zero.
+    
+Test your code with various `x` and `y` values. Where did you
+place the stop execution code?
+
+## Solution
+
+```{r}
+x <- 4
+y <- -10
+
+if (x == 0 | y == 0) {
+  stop("One of x or y is 0!")
+} else if (x / y > 0) {
+  print("stink")
+} else {
+  print("knits")
+}
+```
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider the vector `x` below.
+
+```{r eval=FALSE}
+x <- c(3, 4, 12, 19, 23, 49, 100, 63, 70)
+```
+    
+Write R code that prints the perfect squares in `x`.
+
+## Solution
+
+```{r}
+x <- c(3, 4, 12, 19, 23, 49, 100, 63, 70)
+
+for (i in x) {
+  if (sqrt(i) %% 1) {
+    next
+  }
+  print(i)
+}
+```
+
+# Exercise 4 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Consider `z <- c(-1, .5, 0, .5, 1)`. Write R code that prints
+the smallest non-negative integer $k$ satisfying the inequality
+$$\lvert cos(k) - z \rvert < 0.001$$
+for each component of `z`.
+
+## Solution
+
+```{r}
+for (z in c(-1, .5, 0, .5, 1)) {
+  k <- 0
+  while (abs(cos(k) - z) >= .001) {
+    k <- k + 1
+  }
+  print(k)
+}
+```
