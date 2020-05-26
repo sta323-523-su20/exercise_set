@@ -1,0 +1,94 @@
+---
+title: "Exercises: 05-27-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+```
+
+# Data
+
+## Flint water
+
+```{r message=FALSE}
+flint <- read_csv("http://www2.stat.duke.edu/~sms185/data/health/flint.csv")
+```
+
+Each row represents a home in Flint, Michigan. Water lead contaminant
+value were recorded at three times as represented by `draw1`, `draw2`, and
+`draw3`.
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a visualization of the data from object `flint`. Utilize one of the
+below packages.
+
+```{r}
+library(ggcorrplot) # correlogram plots
+library(ggpol)      # parliment plots and more
+library(patchwork)  # combining plots
+library(gganimate)  # animations
+library(ggiraph)    # interactive plots
+```
+
+## Solution
+
+```{r fig.align='center', fig.height=9, fig.width=10}
+# reshape the data
+flint_long <- flint %>% 
+  pivot_longer(cols = draw1:draw3, names_to = "draw", values_to = "pb_level")
+
+# create a time plot
+p1 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = draw, y = pb_level, group = id)) +
+  geom_point() +
+  geom_line(color = "grey60") +
+  scale_x_discrete(labels = c("Draw 1", "Draw 2", "Draw 3")) +
+  labs(y = "Lead level (ppb)", x = "") +
+  theme_minimal(base_size = 16)
+
+# create a boxplot
+p2 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = draw, y = pb_level)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = c("Draw 1", "Draw 2", "Draw 3")) +
+  labs(y = "", x = "") +
+  theme_minimal(base_size = 16)
+
+# create a density plot
+p3 <- flint_long %>% 
+  filter(zip == 48507, pb_level < 75) %>% 
+  ggplot(mapping = aes(x = pb_level, fill = draw)) +
+  geom_density(alpha = .3) +
+  theme_minimal(base_size = 16) +
+  labs(x = "Lead level (ppb)", y = "Density", fill = "Draw time (seconds)") +
+  scale_fill_discrete(labels = c("0", "45", "120")) +
+  theme(legend.position = "bottom") 
+
+# patchwork to bring everything together
+(p1 + p2) / p3
+```
+
+
