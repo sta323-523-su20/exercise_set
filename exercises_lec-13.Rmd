@@ -1,0 +1,86 @@
+---
+title: "Exercises: 06-03-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Scrape all the QuikTrip stores within 25 miles of Tulsa, OK. 
+Tidy the result in a data frame.
+*Hint:* `html_children()`
+
+## Solution
+
+Using Chrome's developer tools we can find the XHR URL used for the store
+information. We'll use bitly to shorten the link. Even though this is XML, we
+can use `read_html()` to read this into R.
+
+```{r read_xml}
+xhr_url <- "https://bit.ly/2AoTZZD"
+qt_xml <- read_html(xhr_url)
+```
+
+Get variable names (information is in the XML tags).
+
+```{r}
+variable_names <- qt_xml %>% 
+  html_nodes("poi") %>% 
+  map(html_children) %>% 
+  map(html_name) %>% 
+  .[[1]]
+```
+
+Parse the results to obtain the text. Convert everything to a data frame.
+
+```{r}
+qt_stores <- qt_xml %>% 
+  html_nodes("poi") %>% 
+  map(html_children) %>% 
+  map(html_text) %>% 
+  map_dfr(~as.data.frame(t(as.matrix(.x)), stringsAsFactors = FALSE)) %>% 
+  as_tibble()
+```
+
+Set and clean-up the data frame variable names.
+
+```{r}
+names(qt_stores) <- variable_names
+qt_stores <- janitor::clean_names(qt_stores)
+```
+
+Preview the data frame.
+
+```{r}
+qt_stores
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Navigate to https://coronavirus.jhu.edu/us-map. Identify the XHR for the data
+that corresponds to the "Confirmed Cases by County".

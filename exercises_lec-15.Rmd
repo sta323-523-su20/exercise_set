@@ -1,0 +1,115 @@
+---
+title: "Exercises: 06-05-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+**Shell command review**
+
+Repo [shell_practice](https://github.com/sta323-523-su20/shell_practice) 
+contains a zipped folder `organize_me` with files 
+you may have if you run a simulation on a high performance computer. 
+Organize the contents in `organize_me` using the command line according to the 
+following rules:
+
+- delete all `.input2` files,
+- remove the `flags` folder and all of its contents,
+- place the test data text files in a folder named `test-data`,
+- place the `.sh` files in a folder named `shell-scripts`,
+- place the `.R` files in a folder named `R-scripts`,
+- place the `.qsub` files in a folder named `hpc-run`,
+- change the name of folder `organize_me` to `simulation`.
+
+## Solution
+
+```{bash eval=FALSE}
+# assuming you are in organize_me/
+rm *.input2
+
+rm -rf flags/
+
+mkdir test-data/
+mv testdata*.txt test-data/
+
+mkdir shell-scripts/
+mv *.sh shell-scripts/
+
+mkdir R-scripts/
+mv *.R R-scripts/
+
+mkdir hpc-run/
+mv *.qsub hpc-run/
+
+cd ../
+mv organize_me/ simulation/
+```
+
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a `Makefile` for the R project in the 
+[learn_make](https://github.com/sta323-523-su20/learn_make) repository
+on GitHub. The target goal should be `learn_make.html`.
+
+The following steps will guide you in the file's development.
+
+1. Diagram the dependency structure on paper.
+
+2. First, create a `Makefile` that only knits the Rmd file and 
+   produces the `learn_make.html` file.
+
+3. Next, add rules for the data dependencies.
+
+4. Add phony `clean_html` and `clean_data` targets that delete the html file and
+   delete the data, respectively.
+   
+5. Revise your `Makefile` with built-in variables or other useful features.
+
+## Solution
+
+```make
+.PHONY: all
+all: learn_make.html
+
+learn_make.html: learn_make.Rmd data/ok_tor.rds data/fire_stations.rds data/school_districts.rds
+	Rscript -e "library(rmarkdown); render('learn_make.Rmd')"
+
+data/ok_tor.rds: R/get_tornadoes.R
+	Rscript $<
+
+data/fire_stations.rds: R/get_fire_stations.R
+	Rscript $<
+
+data/school_districts.rds: R/get_school_districts.R
+	Rscript $<
+
+.PHONY: clean_html clean_data
+
+clean_html:
+	rm learn_make.html
+
+clean_data:
+	cd data; rm *.rds
+
+```
+
