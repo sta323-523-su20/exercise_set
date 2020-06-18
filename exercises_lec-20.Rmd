@@ -1,0 +1,163 @@
+---
+title: "Exercises: 06-15-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Packages
+
+```{r}
+library(lobstr)
+library(tidyverse)
+library(lubridate)
+library(multidplyr)
+```
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Can you diagnose what is going on below?
+
+```{r}
+x <- 1:10
+y <- x
+
+tracemem(x)
+c(obj_addr(x), obj_addr(y))
+
+y[1] <- 3
+```
+
+## Solution
+
+The question is, why are two copies being made? The vector `x` is of type
+integer. However, when we do subassignment and change the first component of
+`y` to be 3 (of type double) two copies are made. One for the modification of 
+the component, the other for the atomic vector type change.
+
+```{r}
+x <- 1:10
+y <- x
+
+tracemem(x)
+c(obj_addr(x), obj_addr(y))
+
+y[1] <- 3L # type integer
+```
+
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Starting from 0 we can see that
+
+```{r}
+lobstr::obj_size(integer(0))
+lobstr::obj_size(numeric(0))
+```
+
+are both 48 bytes. Run the code below and see if you can deduce how 
+R handles these numeric data in memory?
+
+```{r eval=FALSE}
+diff(sapply(0:100, function(x) obj_size(integer(x))))
+```
+
+```{r eval=FALSE}
+c(obj_size(integer(20)), obj_size(integer(22)))
+```
+
+```{r eval=FALSE}
+diff(sapply(0:100, function(x) obj_size(numeric(x))))
+```
+
+```{r eval=FALSE}
+c(obj_size(numeric(10)), obj_size(numeric(14)))
+```
+
+## Solution
+
+R allocates memory to vectors in chunks. An integer vector of length one is
+allocated 56 bytes, 8 more than a null integer vector. Since an integer
+component only requires 4 bytes of memory, an integer vector of length two is
+also only 56 bytes. R does not need any more memory. Hence, we see that
+`obj_size(integer(1))` and `obj_size(integer(2))` are the same. The `diff()`
+function calls give you an idea as to how memory is allocated in chunks.
+
+# Exercise 3 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Start with the below code to create a partitioned data frame spread across
+three clusters.
+
+```{r eval=FALSE}
+clust <- new_cluster(3)
+
+base_url <- "http://www2.stat.duke.edu/~sms185/data/bike/"
+files <- c("cbs_2015.csv", "cbs_2016.csv", "cbs_2017.csv")
+
+cluster_assign_partition(clust, file_name = str_c(base_url, files))
+cluster_send(clust, cbs_data <- vroom::vroom(file_name))
+
+cbs <- party_df(clust, "cbs_data")
+```
+
+1. Bring the three tibbles together with `collect()`.
+
+2. Fix the names with `janitor::clean_names()`.
+
+3. Add a variable `year`.
+
+4. Partition the tibble onto three clusters grouped by `year`. Check you have
+   `Shards: 3 [3,185,906--3,757,777 rows]`.
+
+5. Use `lubridate::month()`, `lubridate::day()` and `lubridate::wday()`
+   to parse `start_date` and `end_date`, and include the new variables in
+   the tibble.
+   
+6. Compute the median ride duration for each year-month-wday combination; bring
+   everything back together as an object named `cbs`.
+   
+## Solution
+
+```{r eval=FALSE}
+cbs <- cbs %>% 
+  collect()
+
+cbs <- janitor::clean_names(cbs) %>% 
+  mutate(year = str_extract(start_date, pattern = "\\d{4}"))
+
+clust <- new_cluster(3)
+cbs_year <- cbs %>% 
+  group_by(year) %>% 
+  partition(clust)
+
+cbs <- cbs_year %>% 
+  mutate(start_month = lubridate::month(start_date),
+         start_day   = lubridate::day(start_date),
+         start_wday  = lubridate::wday(start_date, label = TRUE),
+         end_month   = lubridate::month(end_date),
+         end_day     = lubridate::day(end_date),
+         end_wday    = lubridate::wday(end_date, label = TRUE)
+         ) %>% 
+  group_by(year, start_month, start_wday) %>% 
+  summarise(med = median(duration)) %>% 
+  collect()
+```

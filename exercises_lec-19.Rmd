@@ -1,0 +1,82 @@
+---
+title: "Exercises: 06-12-20"
+author: "Shawn Santo"
+date: ""
+output: 
+  html_document:
+    css: "exercises.css"
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      comment = "#>", highlight = TRUE,
+                      fig.align = "center")
+```
+
+# Data
+
+See the lecture slides for adding `oil` and `nukes` as tables to the SQLite
+database.
+
+# Exercise 1 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Create a query that returns a table that has all the oil information where the 
+average barrels purchased for a year exceeded 200,000.
+
+## Solution
+
+```sql
+sqlite> SELECT * , AVG(barrels_purchased) FROM oil
+   ...> GROUP BY year
+   ...> HAVING AVG(barrels_purchased) > 200000;
+```
+
+# Exercise 2 {.tabset .tabset-fade .tabset-pills}
+
+## Problem
+
+Use `nukes` and `oil` to perform one SQL query that returns the mean oil price
+and mean nuclear tests per year for all years where oil price and nuclear test
+data is available.
+
+```bash
+year        avg_oil_price     avg_nuke_tests
+----------  ----------------  --------------
+1992        16.7033333333333  0.5
+1991        17.5166666666667  0.583333333333
+1990        20.3591666666667  0.666666666666
+1989        16.4408333333333  0.916666666666
+1988        14.3066666666667  1.25
+1987        16.6766666666667  1.166666666666
+1986        14.3925           1.166666666666
+1985        26.22             1.416666666666
+1984        27.6708333333333  1.5
+1983        29.5833333333333  1.5
+1982        33.3591666666667  1.5
+1981        35.1066666666667  1.333333333333
+1980        31.555            1.166666666666
+1979        18.6758333333333  1.25
+1978        13.4341666666667  1.583333333333
+1977        13.3233333333333  1.666666666666
+1976        12.42             1.666666666666
+1975        11.5883333333333  1.833333333333
+1974        11.0875           1.833333333333
+1973        3.29083333333333  2.0
+```
+
+## Solution
+
+```sql
+sqlite> SELECT nukes.year,
+   ...>    AVG(unit_price) as avg_oil_price, AVG(tests) as avg_nuke_tests
+   ...>    FROM nukes JOIN oil ON nukes.year = oil.year AND nukes.month = oil.month
+   ...>    GROUP BY nukes.year
+   ...>    ORDER BY nukes.year DESC;  
+```
